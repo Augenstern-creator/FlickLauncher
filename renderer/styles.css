@@ -130,6 +130,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  -webkit-app-region: no-drag;
 }
 
 .app-icon {
