@@ -2,7 +2,7 @@
 
 一个轻量级的 Windows 桌面快速启动工具，让你告别在文件夹中翻找的烦恼。
 
-![版本](https://img.shields.io/badge/version-1.1.0-blue)
+![版本](https://img.shields.io/badge/version-1.2.0-blue)
 ![平台](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -21,6 +21,7 @@
 - 📊 **最近使用** — 温度衰减式展示最近启动的程序
 - 🌙 **主题切换** — 亮色 / 暗色主题
 - 🪟 **精致窗口控制** — SVG 矢量图标，最大化自动切换还原图标
+- 🔄 **自动更新** — 支持在线检测和下载更新，无需手动下载
 
 ## 📸 界面预览
 
@@ -57,6 +58,19 @@
    pnpm build
    ```
    打包完成后，安装包在 `build/` 目录下。
+
+### 发布更新
+
+1. 更新 `package.json` 中的 `version` 字段
+2. 在 `changelog.json` 中添加新版本的更新日志
+3. 构建安装包：`pnpm build`
+4. 在 GitHub 上创建新的 Release：
+   - 访问 https://github.com/Augenstern-creator/FlickLauncher/releases
+   - 点击 "Draft a new release"
+   - Tag version 填写 `v1.2.0`（与 package.json 中的版本一致）
+   - 上传 `build/` 目录下的 `.exe` 和 `.yml` 文件
+   - 发布 Release
+5. 用户下次启动应用时会自动检测到更新
 
 ## 📖 使用指南
 
@@ -99,6 +113,17 @@
 - **全局快捷键**: 选择快捷键组合，按下即可唤出/隐藏启动器
 - **数据存储位置**: 更改配置文件存放路径，支持一键迁移已有数据（推荐路径：`E:\HappySoftCache\flick-launcher`）
 - **导入/导出**: 备份和恢复配置
+- **软件更新**: 检查更新和查看更新日志
+
+### 自动更新
+
+应用支持在线自动更新：
+- 启动时自动检查更新（静默）
+- 发现新版本时会弹窗提示
+- 支持下载和安装更新
+- 更新日志在启动时自动显示（仅新版本）
+
+开发者可通过修改 `changelog.json` 文件管理更新日志内容。
 
 ## ⌨️ 快捷键
 
