@@ -10,11 +10,10 @@ const schema = {
   categories: {
     type: 'array',
     default: [
-      { id: 'browser', name: '浏览器', order: 0 },
-      { id: 'dev', name: '开发工具', order: 1 },
-      { id: 'office', name: '办公软件', order: 2 },
-      { id: 'media', name: '影音娱乐', order: 3 },
-      { id: 'files', name: '常用文件', order: 4 }
+      { id: 'tools', name: '常用工具', order: 0 },
+      { id: 'web', name: '常用网页', order: 1 },
+      { id: 'folders', name: '常用文件夹', order: 2 },
+      { id: 'notes', name: '常用笔记', order: 3 }
     ]
   },
   settings: {
@@ -59,7 +58,7 @@ class DataStore {
       name: data.name || '未命名',
       path: data.path || '',
       icon: data.icon || null,
-      category: data.category || 'files',
+      category: data.category || 'folders',
       order: data.order !== undefined ? data.order : shortcuts.length,
       addedAt: new Date().toISOString(),
       lastUsed: null,
@@ -130,7 +129,7 @@ class DataStore {
     const shortcuts = this.getShortcuts();
     const updated = shortcuts.map(s => {
       if (s.category === id) {
-        return { ...s, category: 'files' };
+        return { ...s, category: 'folders' };
       }
       return s;
     });

@@ -388,7 +388,7 @@ function showCategoryContextMenu(e, category) {
         renderCategoryTabs();
       }
     } else if (action === 'delete-cat') {
-      if (confirm(`确定删除分类 "${category.name}" 吗？\n该分类下的快捷方式将移至"常用文件"分类。`)) {
+      if (confirm(`确定删除分类 "${category.name}" 吗？\n该分类下的快捷方式将移至"常用文件夹"分类。`)) {
         await deleteCategory(category.id);
       }
     }
