@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flick Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- 标题栏 -->
+  <div id="titlebar">
+    <div class="titlebar-left">
+      <span class="app-icon">🚀</span>
+      <span class="app-title">Flick Launcher</span>
+    </div>
+    <div class="titlebar-right">
+      <button id="btn-settings" class="titlebar-btn" title="设置">⚙️</button>
+      <button id="btn-theme" class="titlebar-btn" title="切换主题">🌙</button>
+      <button id="btn-add" class="titlebar-btn btn-add" title="添加快捷方式">➕</button>
+      <div class="titlebar-divider"></div>
+      <button id="btn-minimize" class="titlebar-btn" title="最小化">─</button>
+      <button id="btn-maximize" class="titlebar-btn" title="最大化">□</button>
+      <button id="btn-close" class="titlebar-btn btn-close" title="关闭">✕</button>
+    </div>
+  </div>
+
+  <!-- 搜索栏 -->
+  <div id="search-bar">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="搜索快捷方式..." autocomplete="off">
+      <button id="btn-clear-search" class="search-clear" style="display:none;">✕</button>
+    </div>
+  </div>
+
+  <!-- 最近使用 -->
+  <div id="recent-section">
+    <div class="section-header">
+      <span class="section-title">⏰ 最近使用</span>
+    </div>
+    <div id="recent-list" class="shortcut-row"></div>
+  </div>
+
+  <!-- 分类标签 -->
+  <div id="category-tabs">
+    <div class="tab-list">
+      <button class="tab-btn active" data-category="all">全部</button>
+    </div>
+    <button id="btn-add-category" class="tab-btn tab-add" title="新建分类">+</button>
+  </div>
+
+  <!-- 快捷方式网格 -->
+  <div id="shortcut-grid">
+    <div class="grid-empty">
+      <p>还没有快捷方式</p>
+      <p class="empty-hint">点击右上角 ➕ 添加你的第一个快捷方式</p>
+    </div>
+  </div>
+
+  <!-- 添加快捷方式弹窗 -->
+  <div id="modal-add" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加快捷方式</h3>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>文件 / 文件夹路径</label>
+          <div class="input-with-btn">
+            <input type="text" id="add-path" placeholder="选择文件/文件夹，或输入路径..." readonly>
+            <button id="btn-browse-file" class="btn-small">浏览</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>名称</label>
+          <input type="text" id="add-name" placeholder="快捷方式名称">
+        </div>
+        <div class="form-group">
+          <label>分类</label>
+          <select id="add-category">
+            <option value="browser">浏览器</option>
+            <option value="dev">开发工具</option>
+            <option value="office">办公软件</option>
+            <option value="media">影音娱乐</option>
+            <option value="files">常用文件</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>图标（可选）</label>
+          <div class="input-with-btn">
+            <input type="text" id="add-icon" placeholder="选择自定义图标..." readonly>
+            <button id="btn-browse-icon" class="btn-small">浏览</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-add" class="btn btn-secondary">取消</button>
+        <button id="btn-confirm-add" class="btn btn-primary">添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加分类弹窗 -->
+  <div id="modal-add-category" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建分类</h3>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>分类名称</label>
+          <input type="text" id="add-category-name" placeholder="输入分类名称">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-add-category" class="btn btn-secondary">取消</button>
+        <button id="btn-confirm-add-category" class="btn btn-primary">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div id="settings-panel" class="settings-panel" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content settings-content">
+      <div class="modal-header">
+        <h3>⚙️ 设置</h3>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>🎨 主题</label>
+          <div class="btn-group">
+            <button class="btn btn-small theme-btn" data-theme="light">☀️ 亮色</button>
+            <button class="btn btn-small theme-btn active" data-theme="dark">🌙 暗色</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>🚀 开机自启</label>
+          <label class="switch">
+            <input type="checkbox" id="setting-autostart">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label>⌨️ 全局快捷键</label>
+          <select id="setting-shortcut">
+            <option value="CommandOrControl+Shift+Space">Ctrl + Shift + Space</option>
+            <option value="CommandOrControl+Shift+L">Ctrl + Shift + L</option>
+            <option value="CommandOrControl+Alt+Q">Ctrl + Alt + Q</option>
+            <option value="CommandOrControl+Alt+Space">Ctrl + Alt + Space</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📦 数据管理</label>
+          <div class="btn-group">
+            <button id="btn-export" class="btn btn-small">📤 导出配置</button>
+            <button id="btn-import" class="btn btn-small">📥 导入配置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右键菜单 -->
+  <div id="context-menu" class="context-menu" style="display:none;">
+    <div class="context-menu-item" data-action="launch">▶ 启动</div>
+    <div class="context-menu-item" data-action="edit">✏️ 编辑</div>
+    <div class="context-menu-item" data-action="change-icon">🖼️ 更换图标</div>
+    <div class="context-menu-item" data-action="move">📁 移动分类</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item danger" data-action="delete">🗑️ 删除</div>
+  </div>
+
+  <!-- 通知 -->
+  <div id="notification" class="notification" style="display:none;">
+    <span id="notification-text"></span>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
