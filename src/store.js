@@ -1,6 +1,13 @@
 const Store = require('electron-store');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const path = require('path');
+
+const DEFAULT_DATA_PATH = process.env.APPDATA
+  ? path.join(process.env.APPDATA, 'flick-launcher')
+  : path.join(process.env.HOME || '/tmp', '.config', 'flick-launcher');
+
+const RECOMMENDED_DATA_PATH = 'E:\\HappySoftCache\\flick-launcher';
 
 const schema = {
   shortcuts: {
@@ -22,7 +29,8 @@ const schema = {
       theme: 'dark',
       autoStart: false,
       globalShortcut: 'CommandOrControl+Shift+Space',
-      recentCount: 10
+      recentCount: 10,
+      dataPath: DEFAULT_DATA_PATH
     }
   },
   recentUsage: {
@@ -32,12 +40,23 @@ const schema = {
 };
 
 class DataStore {
-  constructor() {
+  constructor(customPath) {
+    const storePath = customPath || this._getDefaultPath();
+
     this.store = new Store({
       name: 'flick-launcher-config',
+      cwd: storePath,
       schema,
       clearInvalidConfig: true
     });
+  }
+
+  _getDefaultPath() {
+    // 优先使用推荐路径，如果不存在则使用默认路径
+    if (fs.existsSync(RECOMMENDED_DATA_PATH)) {
+      return RECOMMENDED_DATA_PATH;
+    }
+    return DEFAULT_DATA_PATH;
   }
 
   // ========== 快捷方式操作 ==========
@@ -53,12 +72,18 @@ class DataStore {
 
   addShortcut(data) {
     const shortcuts = this.getShortcuts();
+
+    // 判断类型：URL 或文件
+    const isUrl = data.path && /^https?:\/\//i.test(data.path);
+    const type = data.type || (isUrl ? 'url' : 'file');
+
     const shortcut = {
       id: uuidv4(),
       name: data.name || '未命名',
       path: data.path || '',
+      type: type,
       icon: data.icon || null,
-      category: data.category || 'folders',
+      category: data.category || 'web',
       order: data.order !== undefined ? data.order : shortcuts.length,
       addedAt: new Date().toISOString(),
       lastUsed: null,
@@ -148,6 +173,12 @@ class DataStore {
     const newSettings = { ...settings, ...updates };
     this.store.set('settings', newSettings);
     return newSettings;
+  }
+
+  // ========== 数据路径操作 ==========
+
+  getDataPath() {
+    return this.store.path || DEFAULT_DATA_PATH;
   }
 
   // ========== 最近使用 ==========
@@ -241,6 +272,43 @@ class DataStore {
       return { success: false, error: e.message };
     }
   }
+
+  // ========== 数据迁移 ==========
+
+  migrateData(newPath) {
+    try {
+      const currentPath = this.store.path;
+
+      // 如果新路径和当前路径相同，无需迁移
+      if (currentPath === newPath) {
+        return { success: true, message: '路径未改变，无需迁移' };
+      }
+
+      // 确保新目录存在
+      if (!fs.existsSync(newPath)) {
+        fs.mkdirSync(newPath, { recursive: true });
+      }
+
+      // 复制数据文件
+      const configFile = path.join(currentPath, 'flick-launcher-config.json');
+      if (fs.existsSync(configFile)) {
+        const newConfigFile = path.join(newPath, 'flick-launcher-config.json');
+        fs.copyFileSync(configFile, newConfigFile);
+      }
+
+      // 更新设置中的路径
+      const settings = this.getSettings();
+      settings.dataPath = newPath;
+      this.store.set('settings', settings);
+
+      return { success: true, message: '数据迁移成功' };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  }
 }
+
+DataStore.RECOMMENDED_DATA_PATH = RECOMMENDED_DATA_PATH;
+DataStore.DEFAULT_DATA_PATH = DEFAULT_DATA_PATH;
 
 module.exports = DataStore;

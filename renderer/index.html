@@ -17,7 +17,7 @@
       <span class="app-title">Flick Launcher</span>
     </div>
     <div class="titlebar-right">
-      <button id="btn-settings" class="titlebar-btn" title="设置">⚙️</button>
+      <button id="btn-settings" class="titlebar-btn" title="设置">️</button>
       <button id="btn-theme" class="titlebar-btn" title="切换主题">🌙</button>
       <button id="btn-add" class="titlebar-btn btn-add" title="添加快捷方式">➕</button>
       <div class="titlebar-divider"></div>
@@ -70,11 +70,22 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
+          <label>类型</label>
+          <div class="btn-group">
+            <button class="btn btn-small type-btn active" data-type="file"> 文件/文件夹</button>
+            <button class="btn btn-small type-btn" data-type="url">🌐 网页 URL</button>
+          </div>
+        </div>
+        <div class="form-group" id="file-path-group">
           <label>文件 / 文件夹路径</label>
           <div class="input-with-btn">
             <input type="text" id="add-path" placeholder="选择文件/文件夹，或输入路径..." readonly>
             <button id="btn-browse-file" class="btn-small">浏览</button>
           </div>
+        </div>
+        <div class="form-group" id="url-path-group" style="display:none;">
+          <label>网页 URL</label>
+          <input type="text" id="add-url" placeholder="https://example.com">
         </div>
         <div class="form-group">
           <label>名称</label>
@@ -83,14 +94,10 @@
         <div class="form-group">
           <label>分类</label>
           <select id="add-category">
-            <option value="browser">浏览器</option>
-            <option value="dev">开发工具</option>
-            <option value="office">办公软件</option>
-            <option value="media">影音娱乐</option>
-            <option value="files">常用文件</option>
+            <!-- 动态加载 -->
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="icon-group">
           <label>图标（可选）</label>
           <div class="input-with-btn">
             <input type="text" id="add-icon" placeholder="选择自定义图标..." readonly>
@@ -138,12 +145,12 @@
         <div class="form-group">
           <label>🎨 主题</label>
           <div class="btn-group">
-            <button class="btn btn-small theme-btn" data-theme="light">☀️ 亮色</button>
+            <button class="btn btn-small theme-btn" data-theme="light">️ 亮色</button>
             <button class="btn btn-small theme-btn active" data-theme="dark">🌙 暗色</button>
           </div>
         </div>
         <div class="form-group">
-          <label>🚀 开机自启</label>
+          <label> 开机自启</label>
           <label class="switch">
             <input type="checkbox" id="setting-autostart">
             <span class="slider"></span>
@@ -157,6 +164,17 @@
             <option value="CommandOrControl+Alt+Q">Ctrl + Alt + Q</option>
             <option value="CommandOrControl+Alt+Space">Ctrl + Alt + Space</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>📦 数据存储位置</label>
+          <div class="data-path-display">
+            <span id="current-data-path">加载中...</span>
+          </div>
+          <div class="btn-group" style="margin-top: 8px;">
+            <button id="btn-change-data-path" class="btn btn-small">📁 更改位置</button>
+            <button id="btn-migrate-data" class="btn btn-small">🔄 迁移数据</button>
+          </div>
+          <p class="help-text">推荐路径：E:\HappySoftCache\flick-launcher</p>
         </div>
         <div class="form-group">
           <label>📦 数据管理</label>

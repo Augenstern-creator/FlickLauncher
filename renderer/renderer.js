@@ -5,6 +5,9 @@ let settings = {};
 let recentItems = [];
 let currentCategory = 'all';
 let contextMenuTarget = null;
+let currentAddType = 'file'; // 'file' 或 'url'
+let currentDataPath = '';
+let pendingDataPath = ''; // 待迁移的路径
 
 // ========== 工具函数 ==========
 
@@ -13,6 +16,11 @@ function getSearchFilter() {
 }
 
 function setIconWithFallback(imgEl, src) {
+  // URL 类型使用地球图标
+  if (src === 'url') {
+    imgEl.src = 'icons/default-icon.png';
+    return;
+  }
   imgEl.src = src || 'icons/default-icon.png';
   imgEl.onerror = () => { imgEl.src = 'icons/default-icon.png'; };
 }
@@ -21,11 +29,12 @@ function setIconWithFallback(imgEl, src) {
 async function init() {
   try {
     // 并行加载数据
-    [shortcuts, categories, settings, recentItems] = await Promise.all([
+    [shortcuts, categories, settings, recentItems, currentDataPath] = await Promise.all([
       window.electronAPI.getShortcuts(),
       window.electronAPI.getCategories(),
       window.electronAPI.getSettings(),
-      window.electronAPI.getRecent()
+      window.electronAPI.getRecent(),
+      window.electronAPI.getDataPath()
     ]);
 
     // 应用主题
@@ -40,6 +49,7 @@ async function init() {
     bindEvents();
 
     console.log('Flick Launcher 已初始化');
+    console.log('数据路径:', currentDataPath);
   } catch (e) {
     console.error('初始化失败:', e);
   }
@@ -89,7 +99,7 @@ function renderRecent() {
   for (const item of recentItems) {
     const el = document.createElement('div');
     el.className = 'recent-item';
-    el.title = item.path;
+    el.title = item.type === 'url' ? item.path : item.path;
 
     const icon = document.createElement('img');
     setIconWithFallback(icon, item.icon);
@@ -148,16 +158,30 @@ function createShortcutCard(shortcut) {
   card.className = 'shortcut-card';
   card.dataset.id = shortcut.id;
   card.draggable = true;
-  card.title = shortcut.path;
+  card.title = shortcut.type === 'url' ? shortcut.path : shortcut.path;
 
   const icon = document.createElement('img');
   icon.className = 'shortcut-icon';
-  setIconWithFallback(icon, shortcut.icon);
+
+  // URL 类型使用特殊图标
+  if (shortcut.type === 'url') {
+    icon.src = 'icons/default-icon.png';
+  } else {
+    setIconWithFallback(icon, shortcut.icon);
+  }
   icon.draggable = false;
 
   const name = document.createElement('div');
   name.className = 'shortcut-name';
   name.textContent = shortcut.name;
+
+  // URL 类型添加标记
+  if (shortcut.type === 'url') {
+    const urlBadge = document.createElement('span');
+    urlBadge.className = 'url-badge';
+    urlBadge.textContent = '🌐';
+    name.appendChild(urlBadge);
+  }
 
   card.appendChild(icon);
   card.appendChild(name);
@@ -209,7 +233,7 @@ async function launchShortcut(id) {
   try {
     const result = await window.electronAPI.launchShortcut(id);
     if (!result.success) {
-      showNotification(`启动失败: ${result.error}`, 'error');
+      showNotification(`启动失败：${result.error}`, 'error');
     } else {
       // 更新最近使用
       recentItems = await window.electronAPI.getRecent();
@@ -230,7 +254,7 @@ async function addShortcut(data) {
     }
     shortcuts.push(result);
     renderShortcuts(getSearchFilter());
-    showNotification(`已添加: ${result.name}`);
+    showNotification(`已添加：${result.name}`);
     return true;
   } catch (e) {
     showNotification('添加失败', 'error');
@@ -291,7 +315,7 @@ async function addCategory(name) {
     const result = await window.electronAPI.addCategory({ name });
     categories.push(result);
     renderCategoryTabs();
-    showNotification(`已创建分类: ${name}`);
+    showNotification(`已创建分类：${name}`);
   } catch (e) {
     showNotification('创建分类失败', 'error');
   }
@@ -451,14 +475,48 @@ function bindEvents() {
   // 添加快捷方式
   document.getElementById('btn-add').addEventListener('click', () => {
     document.getElementById('add-path').value = '';
+    document.getElementById('add-url').value = '';
     document.getElementById('add-name').value = '';
     document.getElementById('add-icon').value = '';
+
+    // 重置为文件类型
+    currentAddType = 'file';
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === 'file');
+    });
+    document.getElementById('file-path-group').style.display = 'block';
+    document.getElementById('url-path-group').style.display = 'none';
+    document.getElementById('icon-group').style.display = 'block';
+
     // 更新分类下拉
     const select = document.getElementById('add-category');
     select.innerHTML = categories.map(c =>
       `<option value="${c.id}">${c.name}</option>`
     ).join('');
     showModal('modal-add');
+  });
+
+  // 类型切换（文件/URL）
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentAddType = btn.dataset.type;
+      document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      if (currentAddType === 'file') {
+        document.getElementById('file-path-group').style.display = 'block';
+        document.getElementById('url-path-group').style.display = 'none';
+        document.getElementById('icon-group').style.display = 'block';
+        // 默认分类为常用文件夹
+        document.getElementById('add-category').value = 'folders';
+      } else {
+        document.getElementById('file-path-group').style.display = 'none';
+        document.getElementById('url-path-group').style.display = 'block';
+        document.getElementById('icon-group').style.display = 'none';
+        // 默认分类为常用网页
+        document.getElementById('add-category').value = 'web';
+      }
+    });
   });
 
   document.getElementById('btn-browse-file').addEventListener('click', async () => {
@@ -485,23 +543,49 @@ function bindEvents() {
   });
 
   document.getElementById('btn-confirm-add').addEventListener('click', async () => {
-    const path = document.getElementById('add-path').value;
-    const name = document.getElementById('add-name').value.trim();
+    let pathValue = '';
+    let name = document.getElementById('add-name').value.trim();
     const icon = document.getElementById('add-icon').value;
     const category = document.getElementById('add-category').value;
 
-    if (!path) {
-      showNotification('请选择文件路径', 'error');
-      return;
-    }
-    if (!name) {
-      showNotification('请输入名称', 'error');
-      return;
-    }
-
-    const success = await addShortcut({ path, name, icon, category });
-    if (success) {
-      hideModal('modal-add');
+    if (currentAddType === 'file') {
+      pathValue = document.getElementById('add-path').value;
+      if (!pathValue) {
+        showNotification('请选择文件路径', 'error');
+        return;
+      }
+      if (!name) {
+        showNotification('请输入名称', 'error');
+        return;
+      }
+      const success = await addShortcut({ path: pathValue, type: 'file', name, icon, category });
+      if (success) {
+        hideModal('modal-add');
+      }
+    } else {
+      pathValue = document.getElementById('add-url').value.trim();
+      if (!pathValue) {
+        showNotification('请输入网页 URL', 'error');
+        return;
+      }
+      // 验证 URL 格式
+      if (!/^https?:\/\//i.test(pathValue)) {
+        showNotification('URL 格式不正确，请以 http:// 或 https:// 开头', 'error');
+        return;
+      }
+      if (!name) {
+        // 自动从 URL 提取名称
+        try {
+          const url = new URL(pathValue);
+          name = url.hostname.replace('www.', '');
+        } catch (e) {
+          name = pathValue;
+        }
+      }
+      const success = await addShortcut({ path: pathValue, type: 'url', name, category });
+      if (success) {
+        hideModal('modal-add');
+      }
     }
   });
 
@@ -526,13 +610,18 @@ function bindEvents() {
   });
 
   // 设置面板
-  document.getElementById('btn-settings').addEventListener('click', () => {
+  document.getElementById('btn-settings').addEventListener('click', async () => {
     // 更新设置面板状态
     document.getElementById('setting-autostart').checked = settings.autoStart || false;
     document.getElementById('setting-shortcut').value = settings.globalShortcut || 'CommandOrControl+Shift+Space';
     document.querySelectorAll('.theme-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.theme === settings.theme);
     });
+
+    // 更新数据路径显示
+    document.getElementById('current-data-path').textContent = currentDataPath;
+    pendingDataPath = '';
+
     showModal('settings-panel');
   });
 
@@ -562,13 +651,47 @@ function bindEvents() {
     showNotification('快捷键已更新');
   });
 
+  // 设置 - 更改数据路径
+  document.getElementById('btn-change-data-path').addEventListener('click', async () => {
+    const newPath = await window.electronAPI.selectDataFolder();
+    if (newPath) {
+      pendingDataPath = newPath;
+      document.getElementById('current-data-path').textContent = newPath + '（待迁移）';
+      showNotification('已选择新路径，点击"迁移数据"完成迁移');
+    }
+  });
+
+  // 设置 - 迁移数据
+  document.getElementById('btn-migrate-data').addEventListener('click', async () => {
+    if (!pendingDataPath) {
+      showNotification('请先选择新的数据路径', 'error');
+      return;
+    }
+
+    if (confirm(`确定将数据迁移到以下路径吗？\n${pendingDataPath}\n\n迁移完成后应用将使用新路径存储数据。`)) {
+      const result = await window.electronAPI.migrateData(pendingDataPath);
+      if (result.success) {
+        currentDataPath = pendingDataPath;
+        pendingDataPath = '';
+        document.getElementById('current-data-path').textContent = currentDataPath;
+        showNotification('数据迁移成功！');
+
+        // 更新设置中的路径
+        settings.dataPath = currentDataPath;
+        await window.electronAPI.updateSettings({ dataPath: currentDataPath });
+      } else {
+        showNotification('迁移失败：' + result.error, 'error');
+      }
+    }
+  });
+
   // 设置 - 导出
   document.getElementById('btn-export').addEventListener('click', async () => {
     const result = await window.electronAPI.exportConfig();
     if (result.success) {
       showNotification('配置已导出');
     } else if (result.error !== '取消导出') {
-      showNotification('导出失败: ' + result.error, 'error');
+      showNotification('导出失败：' + result.error, 'error');
     }
   });
 
@@ -585,7 +708,7 @@ function bindEvents() {
       renderRecent();
       renderShortcuts(getSearchFilter());
     } else if (result.error !== '取消导入') {
-      showNotification('导入失败: ' + result.error, 'error');
+      showNotification('导入失败：' + result.error, 'error');
     }
   });
 
@@ -627,6 +750,10 @@ function bindEvents() {
           }
           break;
         case 'change-icon':
+          if (shortcut.type === 'url') {
+            showNotification('URL 类型不支持更换图标', 'error');
+            return;
+          }
           const iconPath = await window.electronAPI.selectIcon();
           if (iconPath) {
             await updateShortcut(shortcut.id, { icon: iconPath });
@@ -636,7 +763,7 @@ function bindEvents() {
           break;
         case 'move':
           const catNames = categories.map(c => c.name).join(', ');
-          const targetCat = prompt(`移动到哪个分类？\n当前分类: ${catNames}`);
+          const targetCat = prompt(`移动到哪个分类？\n当前分类：${catNames}`);
           if (targetCat) {
             const cat = categories.find(c => c.name === targetCat.trim());
             if (cat) {

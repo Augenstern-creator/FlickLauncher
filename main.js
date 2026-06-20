@@ -118,16 +118,24 @@ function registerIpcHandlers() {
   ipcMain.handle('add-shortcut', async (event, shortcutData) => {
     // 检查是否重复添加（路径相同）
     const existing = store.getShortcuts();
-    const duplicate = existing.find(s =>
-      s.path.toLowerCase() === shortcutData.path.toLowerCase()
-    );
+    const isUrl = shortcutData.path && /^https?:\/\//i.test(shortcutData.path);
+
+    // URL 和文件分别检查重复
+    let duplicate;
+    if (isUrl) {
+      duplicate = existing.find(s => s.type === 'url' && s.path.toLowerCase() === shortcutData.path.toLowerCase());
+    } else {
+      duplicate = existing.find(s => s.type !== 'url' && s.path.toLowerCase() === shortcutData.path.toLowerCase());
+    }
+
     if (duplicate) {
       return { error: 'duplicate', message: `"${duplicate.name}" 已添加，请勿重复添加` };
     }
 
     const result = store.addShortcut(shortcutData);
-    // 尝试提取图标
-    if (shortcutData.path && shortcutData.path.toLowerCase().endsWith('.exe')) {
+
+    // 仅对 .exe 文件尝试提取图标
+    if (!isUrl && shortcutData.path && shortcutData.path.toLowerCase().endsWith('.exe')) {
       const iconPath = await iconExtractor.extractIcon(shortcutData.path);
       if (iconPath) {
         store.updateShortcut(result.id, { icon: iconPath });
@@ -147,12 +155,12 @@ function registerIpcHandlers() {
     return store.deleteShortcut(id);
   });
 
-  // 启动程序/文件
+  // 启动程序/文件/URL
   ipcMain.handle('launch-shortcut', (event, id) => {
     const shortcut = store.getShortcutById(id);
     if (shortcut) {
       store.recordUsage(id);
-      return launcher.launch(shortcut.path);
+      return launcher.launch(shortcut.path, shortcut.type);
     }
     return { success: false, error: '快捷方式不存在' };
   });
@@ -199,7 +207,6 @@ function registerIpcHandlers() {
     return result;
   });
 
-  // 选择文件
   // 选择文件或文件夹
   ipcMain.handle('select-file', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
@@ -230,11 +237,29 @@ function registerIpcHandlers() {
     return null;
   });
 
+  // 选择数据文件夹
+  ipcMain.handle('select-data-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: '选择数据存储位置',
+      defaultPath: Store.RECOMMENDED_DATA_PATH
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
+  // 迁移数据到新路径
+  ipcMain.handle('migrate-data', async (event, newPath) => {
+    return store.migrateData(newPath);
+  });
+
   // 导出配置
   ipcMain.handle('export-config', async () => {
     const result = await dialog.showSaveDialog(mainWindow, {
       defaultPath: 'flick-launcher-config.json',
-      filters: [{ name: 'JSON文件', extensions: ['json'] }]
+      filters: [{ name: 'JSON 文件', extensions: ['json'] }]
     });
     if (!result.canceled && result.filePath) {
       return store.exportConfig(result.filePath);
@@ -246,7 +271,7 @@ function registerIpcHandlers() {
   ipcMain.handle('import-config', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openFile'],
-      filters: [{ name: 'JSON文件', extensions: ['json'] }]
+      filters: [{ name: 'JSON 文件', extensions: ['json'] }]
     });
     if (!result.canceled && result.filePaths.length > 0) {
       return store.importConfig(result.filePaths[0]);
@@ -264,6 +289,11 @@ function registerIpcHandlers() {
     } catch (e) {
       return null;
     }
+  });
+
+  // 获取当前数据路径
+  ipcMain.handle('get-data-path', () => {
+    return store.getDataPath();
   });
 }
 

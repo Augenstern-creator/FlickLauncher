@@ -931,3 +931,59 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ========== 类型切换按钮 ========== */
+.type-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.type-btn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* ========== URL 标记 ========== */
+.url-badge {
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+/* ========== 数据路径显示 ========== */
+.data-path-display {
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: 'Consolas', 'Monaco', monospace;
+  word-break: break-all;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.help-text {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+/* ========== 设置面板表单布局 ========== */
+.settings-content .form-group {
+  flex-wrap: wrap;
+}
+
+.settings-content .btn-group {
+  width: 100%;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+.settings-content .data-path-display {
+  min-width: 200px;
+}

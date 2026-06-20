@@ -7,19 +7,30 @@ class Launcher {
   }
 
   /**
-   * 启动程序或文件
-   * @param {string} targetPath - 程序或文件的路径
+   * 启动程序、文件或 URL
+   * @param {string} target - 程序/文件路径或 URL
+   * @param {string} type - 类型：'file' 或 'url'
    * @returns {object} - { success: boolean, error?: string }
    */
-  async launch(targetPath) {
-    if (!targetPath) {
+  async launch(target, type = 'file') {
+    if (!target) {
       return { success: false, error: '路径为空' };
     }
 
-    // 规范化路径（仅 Windows）
+    // URL 类型直接使用浏览器打开
+    if (type === 'url' || /^https?:\/\//i.test(target)) {
+      try {
+        await shell.openExternal(target);
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // 文件类型
     const normalizedPath = process.platform === 'win32'
-      ? targetPath.replace(/\//g, '\\')
-      : targetPath;
+      ? target.replace(/\//g, '\\')
+      : target;
 
     // 异步检查路径是否存在
     try {
