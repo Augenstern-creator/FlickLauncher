@@ -798,13 +798,22 @@ body {
 
 /* ========== 设置面板 ========== */
 .settings-content {
-  width: 400px;
+  width: 420px;
+}
+
+.settings-content .modal-body {
+  padding: 24px 28px;
+}
+
+.settings-content .modal-header {
+  padding: 22px 28px 18px;
 }
 
 .settings-content .form-group {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .settings-content .form-group > label {
