@@ -199,6 +199,14 @@
             <button id="btn-import" class="btn btn-small">📥 导入配置</button>
           </div>
         </div>
+        <div class="form-group">
+          <label>🔄 软件更新</label>
+          <div class="btn-group">
+            <button id="btn-check-update" class="btn btn-small">检查更新</button>
+            <button id="btn-view-changelog" class="btn btn-small">更新日志</button>
+          </div>
+          <p class="help-text">当前版本：<span id="current-version">v1.0.0</span></p>
+        </div>
       </div>
     </div>
   </div>
@@ -273,7 +281,7 @@
           </div>
           <div class="about-info">
             <div class="about-name">Flick Launcher</div>
-            <div class="about-desc">一个轻量级的桌面快速启动工具</div>
+            <div class="about-desc">一个轻量级的桌面快速启动工具 · <span id="about-version">v1.0.0</span></div>
           </div>
         </div>
         <div class="about-links">
@@ -292,6 +300,42 @@
             </div>
           </a>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 更新日志弹窗 -->
+  <div id="modal-changelog" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-changelog-content">
+      <div class="modal-header">
+        <h3>📋 更新日志</h3>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body changelog-body" id="changelog-body">
+        <!-- 动态生成 -->
+      </div>
+      <div class="modal-footer">
+        <button id="btn-close-changelog" class="btn btn-primary">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 更新弹窗 -->
+  <div id="modal-update" class="modal" style="display:none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-update-content">
+      <div class="modal-header">
+        <h3>🔄 软件更新</h3>
+        <button class="modal-close">✕</button>
+      </div>
+      <div class="modal-body update-body">
+        <div id="update-status-content">
+          <!-- 动态生成 -->
+        </div>
+      </div>
+      <div class="modal-footer" id="update-footer">
+        <!-- 动态生成 -->
       </div>
     </div>
   </div>

@@ -11,6 +11,7 @@ let pendingDataPath = ''; // 待迁移的路径
 let selectedBuiltinIcon = ''; // 当前选中的内置图标路径
 let editingShortcutId = null; // 当前正在编辑的快捷方式 ID
 let deletingShortcutId = null; // 当前正在删除的快捷方式 ID
+let currentAppVersion = ''; // 当前应用版本
 
 // ========== 内置图标列表 ==========
 const BUILTIN_ICONS = [
@@ -62,6 +63,9 @@ async function init() {
       window.electronAPI.getDataPath()
     ]);
 
+    // 获取版本号
+    currentAppVersion = await window.electronAPI.getAppVersion();
+
     // 应用主题
     applyTheme(settings.theme || 'dark');
 
@@ -73,7 +77,20 @@ async function init() {
     // 绑定事件
     bindEvents();
 
+    // 显示版本号
+    const versionEl = document.getElementById('current-version');
+    const aboutVersionEl = document.getElementById('about-version');
+    if (versionEl) versionEl.textContent = `v${currentAppVersion}`;
+    if (aboutVersionEl) aboutVersionEl.textContent = `v${currentAppVersion}`;
+
+    // 监听更新状态
+    window.electronAPI.onUpdateStatus(handleUpdateStatus);
+
+    // 启动后显示更新日志（如果尚未看过当前版本）
+    await showChangelogIfNeeded();
+
     console.log('Flick Launcher 已初始化');
+    console.log('版本:', currentAppVersion);
     console.log('数据路径:', currentDataPath);
   } catch (e) {
     console.error('初始化失败:', e);
@@ -798,6 +815,30 @@ function bindEvents() {
     }
   });
 
+  // 设置 - 检查更新
+  document.getElementById('btn-check-update').addEventListener('click', async () => {
+    showModal('modal-update');
+    document.getElementById('update-status-content').innerHTML = '<div class="update-status-icon checking">🔍</div><p>正在检查更新...</p>';
+    document.getElementById('update-footer').innerHTML = '<button class="btn btn-secondary" onclick="hideModal(\'modal-update\')">取消</button>';
+    await window.electronAPI.checkForUpdates();
+  });
+
+  // 设置 - 查看更新日志
+  document.getElementById('btn-view-changelog').addEventListener('click', async () => {
+    const changelog = await window.electronAPI.getChangelog();
+    if (changelog && changelog.length > 0) {
+      document.getElementById('changelog-body').innerHTML = renderChangelogContent(changelog);
+      showModal('modal-changelog');
+    } else {
+      showNotification('暂无更新日志', 'error');
+    }
+  });
+
+  // 更新日志弹窗 - 关闭
+  document.getElementById('btn-close-changelog').addEventListener('click', () => {
+    hideModal('modal-changelog');
+  });
+
   // 搜索
   const searchInput = document.getElementById('search-input');
   const clearBtn = document.getElementById('btn-clear-search');
@@ -961,6 +1002,129 @@ function bindEvents() {
     }
   });
 }
+
+// ========== 更新日志 ==========
+
+async function showChangelogIfNeeded() {
+  try {
+    const changelog = await window.electronAPI.getChangelog();
+    if (!changelog || changelog.length === 0) return;
+
+    const lastSeen = settings.lastSeenChangelog || '';
+    const latestVersion = changelog[0].version;
+
+    // 如果已经看过最新版本，不显示
+    if (lastSeen === latestVersion) return;
+
+    // 渲染更新日志
+    const body = document.getElementById('changelog-body');
+    body.innerHTML = renderChangelogContent(changelog);
+
+    showModal('modal-changelog');
+
+    // 记录已查看的版本
+    settings.lastSeenChangelog = latestVersion;
+    await window.electronAPI.updateSettings({ lastSeenChangelog: latestVersion });
+  } catch (e) {
+    console.error('显示更新日志失败:', e);
+  }
+}
+
+function renderChangelogContent(changelog) {
+  return changelog.map(entry => {
+    const dateStr = entry.date ? new Date(entry.date).toLocaleDateString('zh-CN') : '';
+    const changes = entry.changes.map(c => `<li>${c}</li>`).join('');
+    return `
+      <div class="changelog-entry">
+        <div class="changelog-version">
+          <span class="changelog-ver-num">v${entry.version}</span>
+          ${dateStr ? `<span class="changelog-date">${dateStr}</span>` : ''}
+        </div>
+        <ul class="changelog-list">${changes}</ul>
+      </div>
+    `;
+  }).join('');
+}
+
+// ========== 自动更新 ==========
+
+function handleUpdateStatus(data) {
+  const statusContent = document.getElementById('update-status-content');
+  const footer = document.getElementById('update-footer');
+
+  switch (data.status) {
+    case 'checking':
+      statusContent.innerHTML = '<div class="update-status-icon checking">🔍</div><p>正在检查更新...</p>';
+      footer.innerHTML = '<button class="btn btn-secondary" onclick="hideModal(\'modal-update\')">取消</button>';
+      break;
+    case 'available':
+      statusContent.innerHTML = `
+        <div class="update-status-icon available">✅</div>
+        <p>发现新版本 <strong>v${data.version}</strong></p>
+        <p class="update-date">${data.releaseDate ? new Date(data.releaseDate).toLocaleDateString('zh-CN') : ''}</p>
+      `;
+      footer.innerHTML = `
+        <button class="btn btn-secondary" onclick="hideModal('modal-update')">暂不更新</button>
+        <button class="btn btn-primary" onclick="downloadUpdate()">立即下载</button>
+      `;
+      if (!document.getElementById('modal-update').style.display || document.getElementById('modal-update').style.display === 'none') {
+        showModal('modal-update');
+      }
+      break;
+    case 'up-to-date':
+      statusContent.innerHTML = '<div class="update-status-icon uptodate">🎉</div><p>当前已是最新版本</p>';
+      footer.innerHTML = '<button class="btn btn-primary" onclick="hideModal(\'modal-update\')">好的</button>';
+      if (!document.getElementById('modal-update').style.display || document.getElementById('modal-update').style.display === 'none') {
+        showModal('modal-update');
+      }
+      break;
+    case 'downloading':
+      const percent = Math.round(data.percent);
+      statusContent.innerHTML = `
+        <div class="update-status-icon downloading">⬇️</div>
+        <p>正在下载更新... ${percent}%</p>
+        <div class="update-progress-bar"><div class="update-progress-fill" style="width:${percent}%"></div></div>
+      `;
+      footer.innerHTML = '<button class="btn btn-secondary" disabled>下载中...</button>';
+      break;
+    case 'downloaded':
+      statusContent.innerHTML = '<div class="update-status-icon downloaded">✅</div><p>下载完成，重启以安装更新</p>';
+      footer.innerHTML = `
+        <button class="btn btn-secondary" onclick="hideModal('modal-update')">稍后重启</button>
+        <button class="btn btn-primary" onclick="installUpdate()">立即重启</button>
+      `;
+      break;
+    case 'error':
+      statusContent.innerHTML = `<div class="update-status-icon error">❌</div><p>更新失败：${data.message}</p>`;
+      footer.innerHTML = '<button class="btn btn-primary" onclick="hideModal(\'modal-update\')">关闭</button>';
+      break;
+  }
+}
+
+async function checkForUpdatesSilent() {
+  try {
+    await window.electronAPI.checkForUpdates();
+  } catch (e) {
+    console.error('检查更新失败:', e);
+  }
+}
+
+async function downloadUpdate() {
+  try {
+    await window.electronAPI.downloadUpdate();
+  } catch (e) {
+    showNotification('下载失败: ' + e.message, 'error');
+  }
+}
+
+function installUpdate() {
+  window.electronAPI.installUpdate();
+}
+
+// 暴露给全局使用
+window.hideModal = hideModal;
+window.downloadUpdate = downloadUpdate;
+window.installUpdate = installUpdate;
 
 // ========== 启动 ==========
 document.addEventListener('DOMContentLoaded', init);

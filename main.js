@@ -7,6 +7,7 @@ const TrayManager = require('./src/tray');
 const AutoStart = require('./src/autoStart');
 const GlobalShortcutManager = require('./src/globalShortcut');
 const IconExtractor = require('./src/iconExtractor');
+const UpdateManager = require('./src/updateManager');
 
 let mainWindow = null;
 let trayManager = null;
@@ -15,6 +16,7 @@ let launcher = null;
 let autoStart = null;
 let globalShortcutManager = null;
 let iconExtractor = null;
+let updateManager = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -80,6 +82,9 @@ function initializeModules() {
 
   // 初始化全局快捷键
   globalShortcutManager = new GlobalShortcutManager(mainWindow, store);
+
+  // 初始化更新管理器
+  updateManager = new UpdateManager(mainWindow);
 }
 
 // 注册 IPC 处理函数
@@ -310,6 +315,47 @@ function registerIpcHandlers() {
     } catch (e) {
       return null;
     }
+  });
+
+  // 获取更新日志
+  ipcMain.handle('get-changelog', () => {
+    try {
+      const changelogPath = path.join(__dirname, 'changelog.json');
+      const data = JSON.parse(fs.readFileSync(changelogPath, 'utf-8'));
+      return data.versions || [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  // 获取应用版本
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+  });
+
+  // 检查更新
+  ipcMain.handle('check-for-updates', async () => {
+    try {
+      await updateManager.checkForUpdates();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  });
+
+  // 下载更新
+  ipcMain.handle('download-update', async () => {
+    try {
+      await updateManager.downloadUpdate();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  });
+
+  // 安装更新并重启
+  ipcMain.handle('install-update', () => {
+    updateManager.quitAndInstall();
   });
 
   // 获取当前数据路径

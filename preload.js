@@ -42,6 +42,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exportConfig: () => ipcRenderer.invoke('export-config'),
   importConfig: () => ipcRenderer.invoke('import-config'),
 
+  // 更新日志 & 版本
+  getChangelog: () => ipcRenderer.invoke('get-changelog'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+
+  // 自动更新
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+
+  // 更新状态监听
+  onUpdateStatus: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('update-status', handler);
+    return () => ipcRenderer.removeListener('update-status', handler);
+  }
+
   // 事件监听
   onThemeChanged: (callback) => {
     const handler = (_event, theme) => callback(theme);

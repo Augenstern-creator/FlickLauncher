@@ -30,7 +30,8 @@ const schema = {
       autoStart: false,
       globalShortcut: 'CommandOrControl+Shift+Space',
       recentCount: 10,
-      dataPath: DEFAULT_DATA_PATH
+      dataPath: DEFAULT_DATA_PATH,
+      lastSeenChangelog: ''
     }
   },
   recentUsage: {
