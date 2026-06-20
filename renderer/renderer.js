@@ -820,7 +820,12 @@ function bindEvents() {
     showModal('modal-update');
     document.getElementById('update-status-content').innerHTML = '<div class="update-status-icon checking">🔍</div><p>正在检查更新...</p>';
     document.getElementById('update-footer').innerHTML = '<button class="btn btn-secondary" onclick="hideModal(\'modal-update\')">取消</button>';
-    await window.electronAPI.checkForUpdates();
+    const result = await window.electronAPI.checkForUpdates();
+    if (!result.success) {
+      // 如果 IPC 调用失败，显示错误信息
+      document.getElementById('update-status-content').innerHTML = `<div class="update-status-icon error">❌</div><p>更新失败：${result.error || '未知错误'}</p>`;
+      document.getElementById('update-footer').innerHTML = '<button class="btn btn-primary" onclick="hideModal(\'modal-update\')">关闭</button>';
+    }
   });
 
   // 设置 - 查看更新日志

@@ -72,7 +72,24 @@ class UpdateManager {
 
   // 检查更新
   checkForUpdates() {
-    return autoUpdater.checkForUpdates();
+    return new Promise((resolve, reject) => {
+      // 设置超时时间（15秒）
+      const timeout = setTimeout(() => {
+        this.sendStatus('error', { message: '检查更新超时，请检查网络连接' });
+        reject(new Error('检查更新超时'));
+      }, 15000);
+
+      autoUpdater.checkForUpdates()
+        .then((result) => {
+          clearTimeout(timeout);
+          resolve(result);
+        })
+        .catch((err) => {
+          clearTimeout(timeout);
+          this.sendStatus('error', { message: err.message || '检查更新失败' });
+          reject(err);
+        });
+    });
   }
 
   // 下载更新

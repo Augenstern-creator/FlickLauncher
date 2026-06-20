@@ -567,6 +567,9 @@ body {
   border-radius: 18px;
   width: 420px;
   max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03);
@@ -590,6 +593,7 @@ body {
   justify-content: space-between;
   padding: 18px 22px 14px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -620,6 +624,13 @@ body {
 
 .modal-body {
   padding: 18px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-header,
+.modal-footer {
+  flex-shrink: 0;
 }
 
 .modal-footer {
@@ -628,6 +639,7 @@ body {
   gap: 8px;
   padding: 14px 22px 18px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 /* ========== 表单 ========== */

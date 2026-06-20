@@ -336,9 +336,10 @@ function registerIpcHandlers() {
   // 检查更新
   ipcMain.handle('check-for-updates', async () => {
     try {
-      await updateManager.checkForUpdates();
+      const result = await updateManager.checkForUpdates();
       return { success: true };
     } catch (e) {
+      console.error('检查更新失败:', e);
       return { success: false, error: e.message };
     }
   });
