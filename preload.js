@@ -46,5 +46,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event, theme) => callback(theme);
     ipcRenderer.on('theme-changed', handler);
     return () => ipcRenderer.removeListener('theme-changed', handler);
+  },
+  onWindowStateChanged: (callback) => {
+    const handler = (_event, state) => callback(state);
+    ipcRenderer.on('window-state-changed', handler);
+    return () => ipcRenderer.removeListener('window-state-changed', handler);
   }
 });

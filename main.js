@@ -51,6 +51,15 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  // 通知渲染进程窗口状态变化（最大化/还原）
+  mainWindow.on('maximize', () => {
+    mainWindow.webContents.send('window-state-changed', 'maximized');
+  });
+
+  mainWindow.on('unmaximize', () => {
+    mainWindow.webContents.send('window-state-changed', 'normal');
+  });
 }
 
 function initializeModules() {

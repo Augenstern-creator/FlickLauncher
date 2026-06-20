@@ -8,6 +8,29 @@ let contextMenuTarget = null;
 let currentAddType = 'file'; // 'file' 或 'url'
 let currentDataPath = '';
 let pendingDataPath = ''; // 待迁移的路径
+let selectedBuiltinIcon = ''; // 当前选中的内置图标路径
+
+// ========== 内置图标列表 ==========
+const BUILTIN_ICONS = [
+  { name: '浏览器', file: 'globe.svg' },
+  { name: '邮件', file: 'mail.svg' },
+  { name: '文件夹', file: 'folder.svg' },
+  { name: '文件', file: 'file.svg' },
+  { name: '代码', file: 'code.svg' },
+  { name: '音乐', file: 'music.svg' },
+  { name: '视频', file: 'video.svg' },
+  { name: '图片', file: 'image.svg' },
+  { name: '设置', file: 'gear.svg' },
+  { name: '终端', file: 'terminal.svg' },
+  { name: '游戏', file: 'game.svg' },
+  { name: '聊天', file: 'chat.svg' },
+  { name: '云', file: 'cloud.svg' },
+  { name: '文档', file: 'document.svg' },
+  { name: '日历', file: 'calendar.svg' },
+  { name: '购物', file: 'shopping.svg' },
+  { name: '工具', file: 'wrench.svg' },
+  { name: '收藏', file: 'star.svg' }
+];
 
 // ========== 工具函数 ==========
 
@@ -56,6 +79,42 @@ async function init() {
 }
 
 // ========== 渲染函数 ==========
+
+function renderBuiltinIconGrid() {
+  const grid = document.getElementById('builtin-icon-grid');
+  grid.innerHTML = '';
+
+  for (const icon of BUILTIN_ICONS) {
+    const item = document.createElement('div');
+    item.className = 'builtin-icon-item';
+    item.dataset.file = icon.file;
+    item.title = icon.name;
+
+    if (selectedBuiltinIcon === `icons/builtin/${icon.file}`) {
+      item.classList.add('selected');
+    }
+
+    const img = document.createElement('img');
+    img.src = `icons/builtin/${icon.file}`;
+    img.draggable = false;
+
+    const label = document.createElement('span');
+    label.textContent = icon.name;
+
+    item.appendChild(img);
+    item.appendChild(label);
+
+    item.addEventListener('click', () => {
+      selectedBuiltinIcon = `icons/builtin/${icon.file}`;
+      document.getElementById('add-icon').value = '';
+      // 更新选中状态
+      grid.querySelectorAll('.builtin-icon-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+
+    grid.appendChild(item);
+  }
+}
 
 function renderCategoryTabs() {
   const tabList = document.querySelector('.tab-list');
@@ -488,6 +547,10 @@ function bindEvents() {
     document.getElementById('url-path-group').style.display = 'none';
     document.getElementById('icon-group').style.display = 'block';
 
+    // 重置内置图标选择
+    selectedBuiltinIcon = '';
+    renderBuiltinIconGrid();
+
     // 更新分类下拉
     const select = document.getElementById('add-category');
     select.innerHTML = categories.map(c =>
@@ -535,6 +598,9 @@ function bindEvents() {
     const iconPath = await window.electronAPI.selectIcon();
     if (iconPath) {
       document.getElementById('add-icon').value = iconPath;
+      // 清除内置图标选择
+      selectedBuiltinIcon = '';
+      document.querySelectorAll('.builtin-icon-item').forEach(el => el.classList.remove('selected'));
     }
   });
 
@@ -545,7 +611,8 @@ function bindEvents() {
   document.getElementById('btn-confirm-add').addEventListener('click', async () => {
     let pathValue = '';
     let name = document.getElementById('add-name').value.trim();
-    const icon = document.getElementById('add-icon').value;
+    const customIcon = document.getElementById('add-icon').value;
+    const icon = customIcon || selectedBuiltinIcon;
     const category = document.getElementById('add-category').value;
 
     if (currentAddType === 'file') {
@@ -812,6 +879,22 @@ function bindEvents() {
   window.electronAPI.onThemeChanged((theme) => {
     applyTheme(theme);
     settings.theme = theme;
+  });
+
+  // 窗口状态变化监听（最大化/还原切换图标）
+  window.electronAPI.onWindowStateChanged((state) => {
+    const maximizeBtn = document.getElementById('btn-maximize');
+    const iconMaximize = maximizeBtn.querySelector('.icon-maximize');
+    const iconRestore = maximizeBtn.querySelector('.icon-restore');
+    if (state === 'maximized') {
+      iconMaximize.style.display = 'none';
+      iconRestore.style.display = 'block';
+      maximizeBtn.title = '还原';
+    } else {
+      iconMaximize.style.display = 'block';
+      iconRestore.style.display = 'none';
+      maximizeBtn.title = '最大化';
+    }
   });
 
   // 快捷键 - Ctrl+F 聚焦搜索

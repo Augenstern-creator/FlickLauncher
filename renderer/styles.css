@@ -152,14 +152,14 @@ body {
 }
 
 .titlebar-btn {
-  width: 32px;
-  height: 30px;
+  width: 40px;
+  height: 32px;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,6 +167,16 @@ body {
 }
 
 .titlebar-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+/* 窗口控制按钮样式 */
+.titlebar-ctrl svg {
+  display: block;
+}
+
+.titlebar-ctrl:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
 }
@@ -986,4 +996,91 @@ body {
 
 .settings-content .data-path-display {
   min-width: 200px;
+}
+
+/* ========== 内置图标选择器 ========== */
+.icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.icon-builtin-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+
+.builtin-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s var(--ease-out);
+  background: var(--bg-input);
+}
+
+.builtin-icon-item:hover {
+  border-color: var(--border-accent);
+  background: var(--accent-faint);
+  transform: translateY(-1px);
+}
+
+.builtin-icon-item.selected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.builtin-icon-item img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.builtin-icon-item span {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.builtin-icon-item.selected span {
+  color: var(--accent);
+}
+
+.icon-custom-row {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-custom-row input {
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s var(--ease-out);
+}
+
+.icon-custom-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.icon-custom-row .btn-small {
+  height: 34px;
 }

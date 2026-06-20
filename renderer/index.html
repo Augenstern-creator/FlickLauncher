@@ -21,9 +21,16 @@
       <button id="btn-theme" class="titlebar-btn" title="切换主题">🌙</button>
       <button id="btn-add" class="titlebar-btn btn-add" title="添加快捷方式">➕</button>
       <div class="titlebar-divider"></div>
-      <button id="btn-minimize" class="titlebar-btn" title="最小化">─</button>
-      <button id="btn-maximize" class="titlebar-btn" title="最大化">□</button>
-      <button id="btn-close" class="titlebar-btn btn-close" title="关闭">✕</button>
+      <button id="btn-minimize" class="titlebar-btn titlebar-ctrl" title="最小化">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+      </button>
+      <button id="btn-maximize" class="titlebar-btn titlebar-ctrl" title="最大化">
+        <svg class="icon-maximize" width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="0.5" width="9" height="9" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+        <svg class="icon-restore" width="10" height="10" viewBox="0 0 10 10" style="display:none"><rect x="2.5" y="0.5" width="7" height="7" stroke="currentColor" stroke-width="1" fill="none"/><rect x="0.5" y="2.5" width="7" height="7" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+      </button>
+      <button id="btn-close" class="titlebar-btn btn-close titlebar-ctrl" title="关闭">
+        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1" fill="none"/></svg>
+      </button>
     </div>
   </div>
 
@@ -98,10 +105,15 @@
           </select>
         </div>
         <div class="form-group" id="icon-group">
-          <label>图标（可选）</label>
-          <div class="input-with-btn">
-            <input type="text" id="add-icon" placeholder="选择自定义图标..." readonly>
-            <button id="btn-browse-icon" class="btn-small">浏览</button>
+          <label>图标</label>
+          <div class="icon-picker">
+            <div class="icon-builtin-grid" id="builtin-icon-grid">
+              <!-- 动态生成内置图标 -->
+            </div>
+            <div class="icon-custom-row">
+              <input type="text" id="add-icon" placeholder="或使用自定义图标路径..." readonly>
+              <button id="btn-browse-icon" class="btn-small">浏览</button>
+            </div>
           </div>
         </div>
       </div>
