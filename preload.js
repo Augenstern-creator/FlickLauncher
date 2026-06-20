@@ -56,7 +56,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('update-status', handler);
     return () => ipcRenderer.removeListener('update-status', handler);
-  }
+  },
 
   // 事件监听
   onThemeChanged: (callback) => {
