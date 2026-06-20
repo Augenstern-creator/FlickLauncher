@@ -533,6 +533,11 @@ function bindEvents() {
   // 主题切换
   document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 
+  // 关于作者
+  document.getElementById('btn-author').addEventListener('click', () => {
+    showModal('modal-about');
+  });
+
   // 添加快捷方式
   document.getElementById('btn-add').addEventListener('click', () => {
     document.getElementById('add-path').value = '';

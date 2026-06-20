@@ -1084,3 +1084,122 @@ body {
 .icon-custom-row .btn-small {
   height: 34px;
 }
+
+/* ========== 作者按钮 ========== */
+.btn-author {
+  width: auto;
+  padding: 0 6px;
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  gap: 4px;
+}
+
+.btn-author:hover {
+  color: var(--accent);
+  background: var(--accent-faint);
+}
+
+/* ========== 关于作者弹窗 ========== */
+.modal-about-content {
+  width: 400px;
+}
+
+.about-body {
+  padding: 22px !important;
+}
+
+.about-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.about-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.about-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+
+.about-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s var(--ease-out);
+}
+
+.about-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-faint);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.about-link svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.about-link-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.about-link-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.about-link-url {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.about-link:hover .about-link-url {
+  color: var(--accent);
+}
