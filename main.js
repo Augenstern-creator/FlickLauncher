@@ -216,14 +216,26 @@ function registerIpcHandlers() {
     return result;
   });
 
-  // 选择文件或文件夹
+  // 选择文件
   ipcMain.handle('select-file', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openFile', 'openDirectory'],
+      properties: ['openFile'],
       filters: [
         { name: '可执行文件', extensions: ['exe', 'lnk', 'bat', 'cmd'] },
         { name: '所有文件', extensions: ['*'] }
       ]
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
+  // 选择文件夹
+  ipcMain.handle('select-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: '选择文件夹'
     });
     if (!result.canceled && result.filePaths.length > 0) {
       return result.filePaths[0];

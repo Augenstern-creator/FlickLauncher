@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 文件选择
   selectFile: () => ipcRenderer.invoke('select-file'),
+  selectFolder: () => ipcRenderer.invoke('select-folder'),
   selectIcon: () => ipcRenderer.invoke('select-icon'),
   getFileInfo: (path) => ipcRenderer.invoke('get-file-info', path),
 

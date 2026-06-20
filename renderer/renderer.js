@@ -594,6 +594,18 @@ function bindEvents() {
     }
   });
 
+  document.getElementById('btn-browse-folder').addEventListener('click', async () => {
+    const folderPath = await window.electronAPI.selectFolder();
+    if (folderPath) {
+      document.getElementById('add-path').value = folderPath;
+      // 自动填充名称（取文件夹名）
+      const info = await window.electronAPI.getFileInfo(folderPath);
+      if (info) {
+        document.getElementById('add-name').value = info.name;
+      }
+    }
+  });
+
   document.getElementById('btn-browse-icon').addEventListener('click', async () => {
     const iconPath = await window.electronAPI.selectIcon();
     if (iconPath) {
