@@ -6,6 +6,7 @@ class UpdateManager {
     this.mainWindow = mainWindow;
     this.updateAvailable = false;
     this.downloadProgress = 0;
+    this.checkTimeout = null;
 
     this.init();
   }
@@ -22,6 +23,7 @@ class UpdateManager {
 
     // 发现新版本
     autoUpdater.on('update-available', (info) => {
+      this.clearCheckTimeout();
       this.updateAvailable = true;
       this.sendStatus('available', {
         version: info.version,
@@ -32,6 +34,7 @@ class UpdateManager {
 
     // 当前已是最新版本
     autoUpdater.on('update-not-available', (info) => {
+      this.clearCheckTimeout();
       this.updateAvailable = false;
       this.sendStatus('up-to-date', {
         version: info.version
@@ -58,6 +61,7 @@ class UpdateManager {
 
     // 错误
     autoUpdater.on('error', (err) => {
+      this.clearCheckTimeout();
       this.sendStatus('error', {
         message: err.message
       });
@@ -70,26 +74,24 @@ class UpdateManager {
     }
   }
 
+  clearCheckTimeout() {
+    if (this.checkTimeout) {
+      clearTimeout(this.checkTimeout);
+      this.checkTimeout = null;
+    }
+  }
+
   // 检查更新
   checkForUpdates() {
-    return new Promise((resolve, reject) => {
-      // 设置超时时间（15秒）
-      const timeout = setTimeout(() => {
-        this.sendStatus('error', { message: '检查更新超时，请检查网络连接' });
-        reject(new Error('检查更新超时'));
-      }, 15000);
+    // 清除之前的超时定时器
+    this.clearCheckTimeout();
 
-      autoUpdater.checkForUpdates()
-        .then((result) => {
-          clearTimeout(timeout);
-          resolve(result);
-        })
-        .catch((err) => {
-          clearTimeout(timeout);
-          this.sendStatus('error', { message: err.message || '检查更新失败' });
-          reject(err);
-        });
-    });
+    // 设置超时时间（15秒）
+    this.checkTimeout = setTimeout(() => {
+      this.sendStatus('error', { message: '检查更新超时，请检查网络连接' });
+    }, 15000);
+
+    return autoUpdater.checkForUpdates();
   }
 
   // 下载更新
