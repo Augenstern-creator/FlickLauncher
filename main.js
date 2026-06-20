@@ -362,6 +362,11 @@ function registerIpcHandlers() {
   ipcMain.handle('get-data-path', () => {
     return store.getDataPath();
   });
+
+  // 打开外部链接
+  ipcMain.handle('open-external', async (event, url) => {
+    await shell.openExternal(url);
+  });
 }
 
 // 应用启动

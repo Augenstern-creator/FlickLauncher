@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectDataFolder: () => ipcRenderer.invoke('select-data-folder'),
   migrateData: (newPath) => ipcRenderer.invoke('migrate-data', newPath),
 
+  // 打开外部链接
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+
   // 导入导出
   exportConfig: () => ipcRenderer.invoke('export-config'),
   importConfig: () => ipcRenderer.invoke('import-config'),

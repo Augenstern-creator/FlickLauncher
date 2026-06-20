@@ -839,6 +839,17 @@ function bindEvents() {
     hideModal('modal-changelog');
   });
 
+  // 关于作者弹窗 - 链接点击
+  document.querySelectorAll('.about-link').forEach(link => {
+    link.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const url = link.getAttribute('href');
+      if (url) {
+        await window.electronAPI.openExternal(url);
+      }
+    });
+  });
+
   // 搜索
   const searchInput = document.getElementById('search-input');
   const clearBtn = document.getElementById('btn-clear-search');
