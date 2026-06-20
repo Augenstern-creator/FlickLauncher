@@ -9,6 +9,8 @@ let currentAddType = 'file'; // 'file' 或 'url'
 let currentDataPath = '';
 let pendingDataPath = ''; // 待迁移的路径
 let selectedBuiltinIcon = ''; // 当前选中的内置图标路径
+let editingShortcutId = null; // 当前正在编辑的快捷方式 ID
+let deletingShortcutId = null; // 当前正在删除的快捷方式 ID
 
 // ========== 内置图标列表 ==========
 const BUILTIN_ICONS = [
@@ -822,11 +824,14 @@ function bindEvents() {
           launchShortcut(shortcut.id);
           break;
         case 'edit':
-          const newName = prompt('修改名称:', shortcut.name);
-          if (newName && newName.trim()) {
-            await updateShortcut(shortcut.id, { name: newName.trim() });
-            showNotification('已更新');
-          }
+          // 打开编辑弹窗
+          editingShortcutId = shortcut.id;
+          document.getElementById('edit-name').value = shortcut.name;
+          const editSelect = document.getElementById('edit-category');
+          editSelect.innerHTML = categories.map(c =>
+            `<option value="${c.id}"${c.id === shortcut.category ? ' selected' : ''}>${c.name}</option>`
+          ).join('');
+          showModal('modal-edit');
           break;
         case 'change-icon':
           if (shortcut.type === 'url') {
@@ -841,23 +846,20 @@ function bindEvents() {
           }
           break;
         case 'move':
-          const catNames = categories.map(c => c.name).join(', ');
-          const targetCat = prompt(`移动到哪个分类？\n当前分类：${catNames}`);
-          if (targetCat) {
-            const cat = categories.find(c => c.name === targetCat.trim());
-            if (cat) {
-              await updateShortcut(shortcut.id, { category: cat.id });
-              renderShortcuts(getSearchFilter());
-              showNotification(`已移动到 "${cat.name}"`);
-            } else {
-              showNotification('分类不存在', 'error');
-            }
-          }
+          // 打开编辑弹窗（只改分类）
+          editingShortcutId = shortcut.id;
+          document.getElementById('edit-name').value = shortcut.name;
+          const moveSelect = document.getElementById('edit-category');
+          moveSelect.innerHTML = categories.map(c =>
+            `<option value="${c.id}"${c.id === shortcut.category ? ' selected' : ''}>${c.name}</option>`
+          ).join('');
+          showModal('modal-edit');
           break;
         case 'delete':
-          if (confirm(`确定删除 "${shortcut.name}" 吗？`)) {
-            await deleteShortcut(shortcut.id);
-          }
+          // 打开删除确认弹窗
+          deletingShortcutId = shortcut.id;
+          document.getElementById('delete-confirm-text').textContent = `确定要删除「${shortcut.name}」吗？`;
+          showModal('modal-confirm-delete');
           break;
       }
     });
@@ -871,6 +873,42 @@ function bindEvents() {
   // 弹窗关闭按钮
   document.querySelectorAll('.modal-close').forEach(btn => {
     btn.addEventListener('click', hideAllModals);
+  });
+
+  // 编辑弹窗 - 取消
+  document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+    hideModal('modal-edit');
+    editingShortcutId = null;
+  });
+
+  // 编辑弹窗 - 确认保存
+  document.getElementById('btn-confirm-edit').addEventListener('click', async () => {
+    if (!editingShortcutId) return;
+    const newName = document.getElementById('edit-name').value.trim();
+    const newCategory = document.getElementById('edit-category').value;
+    if (!newName) {
+      showNotification('名称不能为空', 'error');
+      return;
+    }
+    await updateShortcut(editingShortcutId, { name: newName, category: newCategory });
+    renderShortcuts(getSearchFilter());
+    showNotification('已更新');
+    hideModal('modal-edit');
+    editingShortcutId = null;
+  });
+
+  // 删除确认弹窗 - 取消
+  document.getElementById('btn-cancel-delete').addEventListener('click', () => {
+    hideModal('modal-confirm-delete');
+    deletingShortcutId = null;
+  });
+
+  // 删除确认弹窗 - 确认删除
+  document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+    if (!deletingShortcutId) return;
+    await deleteShortcut(deletingShortcutId);
+    hideModal('modal-confirm-delete');
+    deletingShortcutId = null;
   });
 
   // 点击其他区域关闭右键菜单
